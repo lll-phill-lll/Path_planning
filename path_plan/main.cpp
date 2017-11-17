@@ -10,7 +10,7 @@ int main() {
     doc.LoadFile();
     TiXmlElement * root = doc.FirstChildElement();
     TiXmlElement * w = root -> FirstChildElement();
-    std::cout << w;
+    std::cout << "Hello, again!";
 
     return 0;
 }
