@@ -9,6 +9,10 @@ SOURCES += main.cpp \
     tinyxmlerror.cpp \
     tinyxmlparser.cpp
 
+win32 {
+QMAKE_LFLAGS += -static -static-libgcc -static-libstdc++
+}
+
 HEADERS += \
     tinystr.h \
     tinyxml.h
