@@ -1,5 +1,5 @@
 #include "isearch.h"
-#include <set>
+
 
 ISearch::ISearch()
 {
@@ -12,46 +12,66 @@ ISearch::~ISearch(void) {}
 
 SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const EnvironmentOptions &options)
 {
-    std::cout << (map.getStart()).first << " " << (map.getStart()).second << std::endl << (map.getFinish()).first << " " << (map.getFinish()).second << std::endl;
-    std::set<Node> open;
-    std::set<Node> closed;
-    Node start;
-    start.i = (map.getStart()).first;
-    start.j = (map.getStart()).second;
+    unsigned int start_time = clock();
+    int nodes = 0;
+    Node *start = new Node;
+    ++nodes;
+    (*start).i = (map.getStart()).first;
+    (*start).j = (map.getStart()).second;
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
-    start.g = 0;
+    (*start).g = 0;
+    bool reached = false;
     open.insert(start);
-    Node v;
+    Node *finish_node = new Node;
+    ++nodes;
     while (!open.empty()) {
-        v = *open.begin();
+        Node *v = *open.begin();
         open.erase(v);
-        closed.insert(v);
-        if (v.i == finish_i && v.j == finish_j) {
-            std::cout << "reached!" << std::endl;
+        close.insert(v);
+        if ((*v).i == finish_i && (*v).j == finish_j) {
+            reached = true;
+            (*finish_node).i = (*v).i;
+            (*finish_node).j = (*v).j;
+            (*finish_node).parent = v;
+            (*finish_node).g = (*v).g;
             break;
         }
         for (int i = -1; i != 2; ++i) {
             for (int j = -1; j != 2; ++j) {
                 if (!(i == 0 && j == 0)) {
-                    int adj_i = v.i + i;
-                    int adj_j = v.j + j;
+                    int adj_i = (*v).i + i;
+                    int adj_j = (*v).j + j;
                     if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() && adj_j < map.getMapWidth()) {
-                        Node adj;
-                        adj.i = adj_i;
-                        adj.j = adj_j;
-                        std::cout << adj_i << " " << adj_j << std::endl;
-                        auto it = std::find(closed.begin(), closed.end(), adj);
-                        if (it == closed.end()) {
-                            auto in_open = std::find(open.begin(), open.end(), adj);
-                            if (in_open == open.end()) {
-                                adj.g = v.g + 1;
-                                open.insert(adj);
+                        bool node_in_closed = false;
+                        auto it = close.begin();
+                        for (it; it != close.end(); ++it) {
+                            if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
+                                node_in_closed = true;
+                                break;
+                            }
+                        }
+                        if (!node_in_closed) {
+                            bool node_in_open = false;
+                            auto it = open.begin();
+                            for (it; it != open.end(); ++it) {
+                                if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
+                                    node_in_open = true;
+                                    break;
+                                }
+                            }
+                            if (!node_in_open) {
+                                Node *adj_node = new Node;
+                                ++nodes;
+                                (*adj_node).i = adj_i;
+                                (*adj_node).j = adj_j;
+                                (*adj_node).g = (*v).g + 1;
+                                (*adj_node).parent = v;
+                                open.insert(adj_node);
                             } else {
-                                if ((*in_open).g > v.g + 1) {
-                                    std::cout << "yes" << std::endl;
-                                    // (*in_open).g = v.g + 1;
-
+                                if ((*(*it)).g > (*v).g + 1) {
+                                    (*(*it)).g = (*v).g + 1;
+                                    (*(*it)).parent = v;
                                 }
                             }
 
@@ -61,14 +81,22 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             }
         }
     }
+    int steps = 0;
+    if (reached) {
+        while ((*finish_node).parent != nullptr) {
+            std::cout << (*finish_node).i << " " << (*finish_node).j << std::endl;
+            finish_node = (*finish_node).parent;
+            ++steps;
+        }
+    }
+    unsigned int finish_time = clock();
 
 
-
-    /*sresult.pathfound = ;
-    sresult.nodescreated =  ;
-    sresult.numberofsteps = ;
-    sresult.time = ;
-    sresult.hppath = &hppath; //Here is a constant pointer
+    sresult.pathfound = reached;
+    sresult.nodescreated = nodes ;
+    sresult.numberofsteps = steps;
+    sresult.time = finish_time - start_time;
+    /* sresult.hppath = &hppath; //Here is a constant pointer
     sresult.lppath = &lppath;*/
     return sresult;
 }

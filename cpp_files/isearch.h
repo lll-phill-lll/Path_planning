@@ -8,6 +8,8 @@
 #include <math.h>
 #include <limits>
 #include <chrono>
+#include <ctime>
+#include <set>
 
 class ISearch
 {
@@ -49,6 +51,7 @@ class ISearch
         std::list<Node>                 lppath, hppath;
         double                          hweight;//weight of h-value
         bool                            breakingties;//flag that sets the priority of nodes in addOpen function when their F-values is equal
-        //need to define open, close;
+        std::set<Node*>                 open;
+        std::set<Node*>                 close;
 };
 #endif

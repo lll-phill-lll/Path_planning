@@ -16,7 +16,7 @@ struct Node
 {
     int     i, j; //grid cell coordinates
     double  F = 0, g = 0, H = 0; //f-, g- and h-values of the search node
-    Node    *parent; //backpointer to the predecessor node (e.g. the node which g-value was used to set the g-velue of the current node)
+    Node    *parent = nullptr; //backpointer to the predecessor node (e.g. the node which g-value was used to set the g-velue of the current node)
 
     bool operator== (const Node &other) const {
         return i == other.i && j == other.j;
