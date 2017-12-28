@@ -319,6 +319,17 @@ int Map::getValue(int i, int j) const
     return Grid[i][j];
 }
 
+
+std::pair<int, int> Map::getStart() const
+{
+    return std::make_pair(start_i, start_j);
+}
+
+std::pair<int, int> Map::getFinish() const
+{
+    return std::make_pair(goal_i, goal_j);
+}
+
 int Map::getMapHeight() const
 {
       return height;
