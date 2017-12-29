@@ -18,9 +18,9 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     ++nodes;
     (*start).i = (map.getStart()).first;
     (*start).j = (map.getStart()).second;
+    (*start).g = 0;
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
-    (*start).g = 0;
     bool reached = false;
     open.insert(start);
     Node *finish_node = new Node;
@@ -37,9 +37,9 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             (*finish_node).g = (*v).g;
             break;
         }
-        for (int i = -1; i != 2; ++i) {
-            for (int j = -1; j != 2; ++j) {
-                if (!(i == 0 && j == 0)) {
+        for (int i = -1; i != 2; ++i) { // find successors
+            for (int j = -1; j != 2; ++j) { // --"--
+                if (!(i == 0 && j == 0) && map.getValue(i, j)) { // --"--
                     int adj_i = (*v).i + i;
                     int adj_j = (*v).j + j;
                     if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() && adj_j < map.getMapWidth()) {
@@ -82,12 +82,19 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
         }
     }
     int steps = 0;
-    if (reached) {
+    if (reached) { // makePrimaryPath
         while ((*finish_node).parent != nullptr) {
             std::cout << (*finish_node).i << " " << (*finish_node).j << std::endl;
             finish_node = (*finish_node).parent;
             ++steps;
         }
+    }
+
+    for(auto i : open) {
+        delete i;
+    }
+    for (auto i : close) {
+        delete i;
     }
     unsigned int finish_time = clock();
 
