@@ -39,10 +39,10 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
         }
         for (int i = -1; i != 2; ++i) { // find successors
             for (int j = -1; j != 2; ++j) { // --"--
-                if (!(i == 0 && j == 0) && map.getValue(i, j)) { // --"--
+                if (!(i == 0 && j == 0)) { // --"--
                     int adj_i = (*v).i + i;
                     int adj_j = (*v).j + j;
-                    if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() && adj_j < map.getMapWidth()) {
+                    if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() && adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
                         bool node_in_closed = false;
                         auto it = close.begin();
                         for (it; it != close.end(); ++it) {
