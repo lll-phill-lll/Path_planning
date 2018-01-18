@@ -38,48 +38,42 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             close.insert(finish_node);
             break;
         }
-        for (int i = -1; i != 2; ++i) { // find successors
-            for (int j = -1; j != 2; ++j) { // --"--
-                if (!(i == 0 && j == 0)) { // --"--
-                    int adj_i = (*v).i + i;
-                    int adj_j = (*v).j + j;
-                    if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() &&
-                            adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
-                        bool node_in_closed = false;
-                        auto it = close.begin();
-                        for (it; it != close.end(); ++it) {
-                            if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
-                                node_in_closed = true;
-                                break;
-                            }
-                        }
-                        if (!node_in_closed) {
-                            bool node_in_open = false;
-                            auto it = open.begin();
-                            for (it; it != open.end(); ++it) {
-                                if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
-                                    node_in_open = true;
-                                    break;
-                                }
-                            }
-                            if (!node_in_open) {
-                                Node *adj_node = new Node;
-                                ++nodes;
-                                (*adj_node).i = adj_i;
-                                (*adj_node).j = adj_j;
-                                (*adj_node).g = (*v).g + 1;
-                                (*adj_node).parent = v;
-                                open.insert(adj_node);
-                            } else {
-                                if ((*(*it)).g > (*v).g + 1) {
-                                    (*(*it)).g = (*v).g + 1;
-                                    (*(*it)).parent = v;
-                                }
-                            }
-
-                        }
+        std::list<Node> Successors = findSuccessors(v, map, options);
+        for (auto successor : Successors) {
+            int adj_i = successor.i;
+            int adj_j = successor.j;
+            bool node_in_closed = false;
+            auto it = close.begin();
+            for (it; it != close.end(); ++it) {
+                if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
+                    node_in_closed = true;
+                    break;
+                }
+            }
+            if (!node_in_closed) {
+                bool node_in_open = false;
+                auto it = open.begin();
+                for (it; it != open.end(); ++it) {
+                    if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
+                        node_in_open = true;
+                        break;
                     }
                 }
+                if (!node_in_open) {
+                    Node *adj_node = new Node;
+                    ++nodes;
+                    (*adj_node).i = adj_i;
+                    (*adj_node).j = adj_j;
+                    (*adj_node).g = (*v).g + 1;
+                    (*adj_node).parent = v;
+                    open.insert(adj_node);
+                } else {
+                    if ((*(*it)).g > (*v).g + 1) {
+                        (*(*it)).g = (*v).g + 1;
+                        (*(*it)).parent = v;
+                    }
+                }
+
             }
         }
     }
@@ -113,12 +107,25 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     return sresult;
 }
 
-/*std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const EnvironmentOptions &options)
-{
+std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const EnvironmentOptions &options) {
     std::list<Node> successors;
-    //need to implement
+    Node to_insert;
+    for (int i = -1; i != 2; ++i) {
+        for (int j = -1; j != 2; ++j) {
+            if (!(i == 0 && j == 0)) {
+                int adj_i = (*curNode).i + i;
+                int adj_j = (*curNode).j + j;
+                if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() &&
+                        adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
+                    to_insert.i = adj_i;
+                    to_insert.j = adj_j;
+                    successors.push_back(to_insert);
+                }
+            }
+        }
+    }
     return successors;
-}*/
+}
 
 /*void ISearch::makePrimaryPath(Node curNode)
 {
