@@ -14,6 +14,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
 {
     unsigned int start_time = clock();
     int nodes = 0;
+    int steps = 0;
     Node *start = new Node;
     ++nodes;
     (*start).i = (map.getStart()).first;
@@ -26,6 +27,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     Node *finish_node = new Node;
     ++nodes;
     while (!open.empty()) {
+        ++steps;
         Node *v = *open.begin();
         open.erase(v);
         close.insert(v);
@@ -35,7 +37,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             (*finish_node).j = (*v).j;
             (*finish_node).parent = v;
             (*finish_node).g = (*v).g;
-            close.insert(finish_node);
+            open.insert(finish_node);
             break;
         }
         std::list<Node> Successors = findSuccessors(v, map, options);
@@ -77,33 +79,31 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             }
         }
     }
-    int steps = 0;
-    Node *it = finish_node;
+    /* Node *it = finish_node;
     if (reached) {
         while ((*it).parent != nullptr) {
             std::cout << (*it).j << " " << (*it).i << std::endl;
+            lppath.push_back(*it);
+            hppath.push_back(*it);
             it = (*it).parent;
             ++steps;
         }
-    }
-    int deleted = 0;
+    } */
+    makePrimaryPath(finish_node);
+    // makeSecondaryPath();
     for(auto i : open) {
         delete i;
-        ++deleted;
     }
     for (auto i : close) {
         delete i;
-        ++deleted;
     }
     unsigned int finish_time = clock();
-    std::cout << deleted << " deleted " << std::endl;
-
     sresult.pathfound = reached;
     sresult.nodescreated = nodes ;
     sresult.numberofsteps = steps;
     sresult.time = finish_time - start_time;
-    /* sresult.hppath = &hppath; //Here is a constant pointer
-    sresult.lppath = &lppath;*/
+    sresult.hppath = &hppath;
+    sresult.lppath = &lppath;
     return sresult;
 }
 
@@ -157,12 +157,18 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
     return successors;
 }
 
-/*void ISearch::makePrimaryPath(Node curNode)
-{
-    //need to implement
-}*/
+void ISearch::makePrimaryPath(Node *curNode) {
+    while ((*curNode).parent != nullptr) {
+        std::cout << (*curNode).j << " " << (*curNode).i << std::endl;
+        lppath.push_front(*curNode);
+        hppath.push_front(*curNode);
+        curNode = (*curNode).parent;
+    }
+}
 
-/*void ISearch::makeSecondaryPath()
-{
-    //need to implement
-}*/
+void ISearch::makeSecondaryPath() {
+    Node prev;
+    for (auto nodes : lppath) {
+
+    }
+}
