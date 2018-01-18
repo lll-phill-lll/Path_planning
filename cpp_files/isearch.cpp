@@ -79,9 +79,9 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     }
     int steps = 0;
     Node *it = finish_node;
-    if (reached) { // makePrimaryPath
+    if (reached) {
         while ((*it).parent != nullptr) {
-            std::cout << (*it).i << " " << (*it).j << std::endl;
+            std::cout << (*it).j << " " << (*it).i << std::endl;
             it = (*it).parent;
             ++steps;
         }
@@ -110,6 +110,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
 std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const EnvironmentOptions &options) {
     std::list<Node> successors;
     Node to_insert;
+    int bariers_around;
     for (int i = -1; i != 2; ++i) {
         for (int j = -1; j != 2; ++j) {
             if (!(i == 0 && j == 0)) {
@@ -117,9 +118,38 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
                 int adj_j = (*curNode).j + j;
                 if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() &&
                         adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
-                    to_insert.i = adj_i;
-                    to_insert.j = adj_j;
-                    successors.push_back(to_insert);
+                    bariers_around = 0;
+                    if (i != 0 && j != 0) {
+                        if (map.getValue(adj_i, adj_j - j)) {
+                            ++bariers_around;
+                        }
+                        if (map.getValue(adj_i - i, adj_j)) {
+                            ++bariers_around;
+                        }
+                    }
+                    if (options.allowdiagonal) {
+                        if (bariers_around == 0) {
+                            to_insert.i = adj_i;
+                            to_insert.j = adj_j;
+                            successors.push_back(to_insert);
+                        } else if (options.cutcorners) {
+                            if (bariers_around == 1) {
+                                to_insert.i = adj_i;
+                                to_insert.j = adj_j;
+                                successors.push_back(to_insert);
+                            } else if (options.allowsqueeze) {
+                                to_insert.i = adj_i;
+                                to_insert.j = adj_j;
+                                successors.push_back(to_insert);
+                            }
+                        }
+                    } else {
+                        if (i == 0 || j == 0) {
+                            to_insert.i = adj_i;
+                            to_insert.j = adj_j;
+                            successors.push_back(to_insert);
+                        }
+                    }
                 }
             }
         }
