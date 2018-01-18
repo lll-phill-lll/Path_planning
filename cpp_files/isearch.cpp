@@ -20,6 +20,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     (*start).i = (map.getStart()).first;
     (*start).j = (map.getStart()).second;
     (*start).g = 0;
+    (*start).parent = nullptr;
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
     bool reached = false;
@@ -35,7 +36,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             reached = true;
             (*finish_node).i = (*v).i;
             (*finish_node).j = (*v).j;
-            (*finish_node).parent = v;
+            (*finish_node).parent = (*v).parent;
             (*finish_node).g = (*v).g;
             open.insert(finish_node);
             break;
@@ -79,18 +80,11 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             }
         }
     }
-    /* Node *it = finish_node;
-    if (reached) {
-        while ((*it).parent != nullptr) {
-            std::cout << (*it).j << " " << (*it).i << std::endl;
-            lppath.push_back(*it);
-            hppath.push_back(*it);
-            it = (*it).parent;
-            ++steps;
-        }
-    } */
     makePrimaryPath(finish_node);
-    // makeSecondaryPath();
+    if (reached) {
+        lppath.push_front(*start);
+    }
+    makeSecondaryPath();
     for(auto i : open) {
         delete i;
     }
@@ -159,16 +153,29 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
 
 void ISearch::makePrimaryPath(Node *curNode) {
     while ((*curNode).parent != nullptr) {
-        std::cout << (*curNode).j << " " << (*curNode).i << std::endl;
         lppath.push_front(*curNode);
-        hppath.push_front(*curNode);
         curNode = (*curNode).parent;
     }
 }
 
 void ISearch::makeSecondaryPath() {
+    bool direction_chosen = false;
     Node prev;
-    for (auto nodes : lppath) {
-
+    int i_dif = 0, j_dif = 0;
+    for (auto node : lppath) {
+        if (!direction_chosen) {
+            prev = node;
+            direction_chosen = true;
+        } else {
+            if (prev.i - node.i != i_dif || prev.j - node.j != j_dif) {
+                hppath.push_back(prev);
+                i_dif = prev.i - node.i;
+                j_dif = prev.j - node.j;
+                prev = node;
+            } else {
+                prev = node;
+            }
+        }
     }
+    hppath.push_back(*lppath.rbegin());
 }
