@@ -25,14 +25,14 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     (*start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
     (*start).parent = nullptr;
     bool reached = false;
-    open.insert(start);
+    open.push_back(start);
     Node *finish_node = new Node;
     ++nodes;
     while (!open.empty()) {
         ++steps;
         Node *v = *open.begin();
-        open.erase(v);
-        close.insert(v);
+        open.erase(std::find(open.begin(), open.end(), v));
+        close.push_back(v);
         if ((*v).i == finish_i && (*v).j == finish_j) {
             reached = true;
             (*finish_node).i = (*v).i;
@@ -40,7 +40,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             (*finish_node).parent = (*v).parent;
             (*finish_node).g = (*v).g;
             (*finish_node).H = (*v).H;
-            open.insert(finish_node);
+            open.push_back(finish_node);
             break;
         }
         std::list<Node> Successors = findSuccessors(v, map, options);
@@ -72,7 +72,13 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                     (*adj_node).g = (*v).g + 1;
                     (*adj_node).parent = v;
                     (*adj_node).H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
-                    open.insert(adj_node);
+                    if (open.empty()) {
+                        open.push_back(adj_node);
+                    } else if (*adj_node > *(*open.begin())) {
+                        open.push_back(adj_node);
+                    } else {
+                        open.push_front(adj_node);
+                    }
                 } else {
                     if ((*(*it)).g > (*v).g + 1) {
                         (*(*it)).g = (*v).g + 1;
@@ -129,16 +135,28 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
                         if (bariers_around == 0) {
                             to_insert.i = adj_i;
                             to_insert.j = adj_j;
-                            successors.push_back(to_insert);
+                            if (i == 0 || j == 0) {
+                                successors.push_front(to_insert);
+                            } else {
+                                successors.push_back(to_insert);
+                            }
                         } else if (options.cutcorners) {
                             if (bariers_around == 1) {
                                 to_insert.i = adj_i;
                                 to_insert.j = adj_j;
-                                successors.push_back(to_insert);
+                                if (i == 0 || j == 0) {
+                                    successors.push_front(to_insert);
+                                } else {
+                                    successors.push_back(to_insert);
+                                }
                             } else if (options.allowsqueeze) {
                                 to_insert.i = adj_i;
                                 to_insert.j = adj_j;
-                                successors.push_back(to_insert);
+                                if (i == 0 || j == 0) {
+                                    successors.push_front(to_insert);
+                                } else {
+                                    successors.push_back(to_insert);
+                                }
                             }
                         }
                     } else {

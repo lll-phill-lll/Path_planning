@@ -41,8 +41,8 @@ class ISearch
 
 
 
-        double computeHFromCellToCell(int start_i, int start_j, int fin_i, int fin_j, const EnvironmentOptions &options) {
-            return 0;
+        virtual double computeHFromCellToCell(int start_i, int start_j, int fin_i, int fin_j, const EnvironmentOptions &options) {
+            return 0; // sqrt((start_i - fin_i) * (start_i - fin_i) + (start_j - fin_j) * (start_j - fin_j));
         }
         std::list<Node> findSuccessors(Node *curNode, const Map &map, const EnvironmentOptions &options);
         void makePrimaryPath(Node *curNode);//Makes path using back pointers
@@ -53,7 +53,7 @@ class ISearch
         std::list<Node>                 lppath, hppath;
         double                          hweight;//weight of h-value
         bool                            breakingties;//flag that sets the priority of nodes in addOpen function when their F-values is equal
-        std::set<Node*>                 open;
-        std::set<Node*>                 close;
+        std::list<Node*>                 open;
+        std::list<Node*>                 close;
 };
 #endif

@@ -21,9 +21,8 @@ struct Node
     bool operator == (const Node &other) const {
         return i == other.i && j == other.j;
     }
-
-     bool operator < (const Node &other) const {
-        return (g + H) < (other.g + other.H);
+    bool operator > (const Node & other) const {
+        return g + H > other.g + other.H;
     }
 };
 #endif
