@@ -157,7 +157,6 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
 
 void ISearch::makePrimaryPath(Node *curNode) {
     while ((*curNode).parent != nullptr) {
-        std::cout << curNode->i << " " << curNode->j << " " << curNode->H << std::endl;
         lppath.push_front(*curNode);
         curNode = (*curNode).parent;
     }

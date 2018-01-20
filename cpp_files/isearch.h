@@ -42,7 +42,7 @@ class ISearch
 
 
         double computeHFromCellToCell(int start_i, int start_j, int fin_i, int fin_j, const EnvironmentOptions &options) {
-            return sqrt((start_i - fin_i) * (start_i - fin_i) + (start_j - fin_j) * (start_j - fin_j));
+            return 0;
         }
         std::list<Node> findSuccessors(Node *curNode, const Map &map, const EnvironmentOptions &options);
         void makePrimaryPath(Node *curNode);//Makes path using back pointers
