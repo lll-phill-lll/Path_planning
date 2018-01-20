@@ -20,9 +20,10 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     (*start).i = (map.getStart()).first;
     (*start).j = (map.getStart()).second;
     (*start).g = 0;
-    (*start).parent = nullptr;
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
+    (*start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
+    (*start).parent = nullptr;
     bool reached = false;
     open.insert(start);
     Node *finish_node = new Node;
@@ -38,6 +39,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             (*finish_node).j = (*v).j;
             (*finish_node).parent = (*v).parent;
             (*finish_node).g = (*v).g;
+            (*finish_node).H = (*v).H;
             open.insert(finish_node);
             break;
         }
@@ -69,10 +71,12 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                     (*adj_node).j = adj_j;
                     (*adj_node).g = (*v).g + 1;
                     (*adj_node).parent = v;
+                    (*adj_node).H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
                     open.insert(adj_node);
                 } else {
                     if ((*(*it)).g > (*v).g + 1) {
                         (*(*it)).g = (*v).g + 1;
+                        (*(*it)).H = (*v).H;
                         (*(*it)).parent = v;
                     }
                 }
@@ -153,6 +157,7 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
 
 void ISearch::makePrimaryPath(Node *curNode) {
     while ((*curNode).parent != nullptr) {
+        std::cout << curNode->i << " " << curNode->j << " " << curNode->H << std::endl;
         lppath.push_front(*curNode);
         curNode = (*curNode).parent;
     }
@@ -179,3 +184,4 @@ void ISearch::makeSecondaryPath() {
     }
     hppath.push_back(*lppath.rbegin());
 }
+
