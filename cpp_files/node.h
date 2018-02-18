@@ -21,8 +21,13 @@ struct Node
     bool operator == (const Node &other) const {
         return i == other.i && j == other.j;
     }
-    bool operator > (const Node & other) const {
-        return g + H > other.g + other.H;
+    bool operator < (const Node & other) const {
+        return g + H < other.g + other.H;
+    }
+    bool print() {
+        std::cout << "i = " << i << " j = " << j << std::endl;
+        std::cout << "g = " << g << "H = " << H << std::endl;
+        std::cout << "--------------------------" << std::endl;
     }
 };
 #endif

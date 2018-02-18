@@ -15,92 +15,102 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     unsigned int start_time = clock();
     int nodes = 0;
     int steps = 0;
-    Node *start = new Node;
+    Node start;
     ++nodes;
-    (*start).i = (map.getStart()).first;
-    (*start).j = (map.getStart()).second;
-    (*start).g = 0;
+    start.i = (map.getStart()).first;
+    start.j = (map.getStart()).second;
+    start.g = 0;
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
-    (*start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
-    (*start).parent = nullptr;
+    (start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
+    (start).parent = nullptr;
     bool reached = false;
-    open.push_back(start);
-    Node *finish_node = new Node;
+    open.insert(start);
+    Node finish_node;
     ++nodes;
     while (!open.empty()) {
         ++steps;
-        Node *v = *open.begin();
-        open.erase(std::find(open.begin(), open.end(), v));
-        close.push_back(v);
-        if ((*v).i == finish_i && (*v).j == finish_j) {
+        Node v = *open.begin();
+        open.erase(v);
+        close.insert(v);
+        // v = *(close.find(v));
+        if (v.i == finish_i && v.j == finish_j) {
             reached = true;
-            (*finish_node).i = (*v).i;
-            (*finish_node).j = (*v).j;
-            (*finish_node).parent = (*v).parent;
-            (*finish_node).g = (*v).g;
-            (*finish_node).H = (*v).H;
-            open.push_back(finish_node);
+            finish_node.i = v.i;
+            finish_node.j = v.j;
+            finish_node.parent = v.parent;
+            finish_node.g = v.g;
+            finish_node.H = v.H;
+            open.insert(finish_node);
             break;
         }
         std::list<Node> Successors = findSuccessors(v, map, options);
+
         for (auto successor : Successors) {
+            successor.print();
             int adj_i = successor.i;
             int adj_j = successor.j;
             bool node_in_closed = false;
-            auto it = close.begin();
-            for (it; it != close.end(); ++it) {
-                if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
+            auto it_close = close.begin();
+            for (it_close; it_close != close.end(); ++it_close) {
+                if ((*it_close).i == adj_i && (*it_close).j == adj_j) {
                     node_in_closed = true;
                     break;
                 }
             }
+            /* if (it_close != close.end()) {
+                node_in_closed = true;
+            }*/
+            std::cout << "close size: " << close.size() << std::endl;
             if (!node_in_closed) {
                 bool node_in_open = false;
-                auto it = open.begin();
-                for (it; it != open.end(); ++it) {
-                    if ((*(*it)).i == adj_i && (*(*it)).j == adj_j) {
+                auto it_open = open.begin();
+
+                /* if (it_open != open.end()) {
+                    node_in_open = true;
+                }*/
+
+                for (it_open; it_open != open.end(); ++it_open) {
+                    if ((*it_open).i == adj_i && (*it_open).j == adj_j) {
                         node_in_open = true;
                         break;
                     }
                 }
                 if (!node_in_open) {
-                    Node *adj_node = new Node;
+                    std::cout << "hello\n";
+                    Node adj_node;
                     ++nodes;
-                    (*adj_node).i = adj_i;
-                    (*adj_node).j = adj_j;
-                    (*adj_node).g = (*v).g + 1;
-                    (*adj_node).parent = v;
-                    (*adj_node).H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
-                    if (open.empty()) {
-                        open.push_back(adj_node);
-                    } else if (*adj_node > *(*open.begin())) {
-                        open.push_back(adj_node);
-                    } else {
-                        open.push_front(adj_node);
-                    }
+                    adj_node.i = adj_i;
+                    adj_node.j = adj_j;
+                    adj_node.g = v.g + 1;
+                    adj_node.parent = &v;
+                    adj_node.H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
+                    open.insert(adj_node);
                 } else {
-                    if ((*(*it)).g > (*v).g + 1) {
-                        (*(*it)).g = (*v).g + 1;
-                        (*(*it)).H = (*v).H;
-                        (*(*it)).parent = v;
+                    if ((*it_open).g > v.g + 1) {
+                        open.erase(*it_open);
+                        Node ch;
+                        (ch).g = v.g + 1;
+                        (ch).H = v.H;
+                        (ch).parent = &v;
+                        open.insert(ch);
                     }
                 }
 
             }
         }
     }
-    makePrimaryPath(finish_node);
+    /* makePrimaryPath(finish_node);
     if (reached) {
-        lppath.push_front(*start);
-    }
-    makeSecondaryPath();
-    for(auto i : open) {
+        lppath.push_front(start);
+    }*/
+    // makeSecondaryPath();
+    /* for(auto i : open) {
         delete i;
     }
     for (auto i : close) {
         delete i;
-    }
+    } */
     unsigned int finish_time = clock();
     sresult.pathfound = reached;
     sresult.nodescreated = nodes ;
@@ -111,15 +121,23 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     return sresult;
 }
 
-std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const EnvironmentOptions &options) {
+double successor_g(int i_parent, int j_parent, int i, int j) {
+    if (abs(i_parent - i) - abs(j_parent - j)) {
+        return 1;
+    } else {
+        return sqrt(2);
+    }
+}
+
+std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const EnvironmentOptions &options) {
     std::list<Node> successors;
     Node to_insert;
     int bariers_around;
     for (int i = -1; i != 2; ++i) {
         for (int j = -1; j != 2; ++j) {
             if (!(i == 0 && j == 0)) {
-                int adj_i = (*curNode).i + i;
-                int adj_j = (*curNode).j + j;
+                int adj_i = curNode.i + i;
+                int adj_j = curNode.j + j;
                 if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() &&
                         adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
                     bariers_around = 0;
@@ -173,10 +191,10 @@ std::list<Node> ISearch::findSuccessors(Node *curNode, const Map &map, const Env
     return successors;
 }
 
-void ISearch::makePrimaryPath(Node *curNode) {
-    while ((*curNode).parent != nullptr) {
-        lppath.push_front(*curNode);
-        curNode = (*curNode).parent;
+void ISearch::makePrimaryPath(Node curNode) {
+    while (curNode.parent != nullptr) {
+        lppath.push_front(curNode);
+        curNode = *(curNode.parent);
     }
 }
 
