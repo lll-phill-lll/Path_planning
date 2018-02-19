@@ -13,6 +13,7 @@ ISearch::~ISearch(void) {}
 SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const EnvironmentOptions &options)
 {
     unsigned int start_time = clock();
+    int width = map.getMapWidth();
     int nodes = 0;
     int steps = 0;
     Node start;
@@ -23,16 +24,19 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
     (start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
-    (start).parent = nullptr;
+    (start).parent = -1;
     bool reached = false;
-    open.insert(start);
+    open.push_back(start);
     Node finish_node;
     ++nodes;
     while (!open.empty()) {
         ++steps;
+        std::sort(open.begin(), open.end());
         Node v = *open.begin();
-        open.erase(v);
-        close.insert(v);
+        open.erase(open.begin());
+        int current_key = width * v.j + v.i;
+        close[current_key] = v;
+        // close.insert(v);
         // v = *(close.find(v));
         if (v.i == finish_i && v.j == finish_j) {
             reached = true;
@@ -41,7 +45,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             finish_node.parent = v.parent;
             finish_node.g = v.g;
             finish_node.H = v.H;
-            open.insert(finish_node);
+            open[width * finish_node.j + finish_node.i] = finish_node;
             break;
         }
         std::list<Node> Successors = findSuccessors(v, map, options);
@@ -50,17 +54,22 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             successor.print();
             int adj_i = successor.i;
             int adj_j = successor.j;
+            int node_key = width* adj_j + adj_i;
             bool node_in_closed = false;
-            auto it_close = close.begin();
+            /* auto it_close = close.begin();
             for (it_close; it_close != close.end(); ++it_close) {
                 if ((*it_close).i == adj_i && (*it_close).j == adj_j) {
                     node_in_closed = true;
                     break;
                 }
-            }
+            } */
             /* if (it_close != close.end()) {
                 node_in_closed = true;
             }*/
+            auto it = close.find(node_key);
+            if (it != close.end()) {
+                node_in_closed = true;
+            }
             std::cout << "close size: " << close.size() << std::endl;
             if (!node_in_closed) {
                 bool node_in_open = false;
@@ -83,17 +92,14 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                     adj_node.i = adj_i;
                     adj_node.j = adj_j;
                     adj_node.g = v.g + 1;
-                    adj_node.parent = &v;
+                    adj_node.parent = current_key;
                     adj_node.H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
-                    open.insert(adj_node);
+                    open.push_back(adj_node);
                 } else {
                     if ((*it_open).g > v.g + 1) {
-                        open.erase(*it_open);
-                        Node ch;
-                        (ch).g = v.g + 1;
-                        (ch).H = v.H;
-                        (ch).parent = &v;
-                        open.insert(ch);
+                        (*it_open).g = v.g + 1;
+                        (*it_open).H = v.H;
+                        (*it_open).parent = current_key;
                     }
                 }
 
@@ -191,12 +197,12 @@ std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const Envi
     return successors;
 }
 
-void ISearch::makePrimaryPath(Node curNode) {
-    while (curNode.parent != nullptr) {
+/* void ISearch::makePrimaryPath(Node curNode) {
+    while (curNode.parent != -1) {
         lppath.push_front(curNode);
-        curNode = *(curNode.parent);
+        curNode = curNode.parent;
     }
-}
+} */
 
 void ISearch::makeSecondaryPath() {
     bool direction_chosen = false;
