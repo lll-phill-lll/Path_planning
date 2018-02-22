@@ -50,14 +50,14 @@ class ISearch
         std::list<Node> findSuccessors(Node curNode, const Map &map, const EnvironmentOptions &options);
         void makePrimaryPath(Node curNode);//Makes path using back pointers
         void makeSecondaryPath();//Makes another type of path(sections or points)
-        double succesor_g(int i_parent, int j_parent, int i, int j);
+        double successor_g(Node a, Node b);
         //Node resetParent(Node current, Node parent, const Map &map, const EnvironmentOptions &options) {return current;}//need for Theta*
 
         SearchResult                    sresult;
         std::list<Node>                 lppath, hppath;
         double                          hweight;//weight of h-value
         bool                            breakingties;//flag that sets the priority of nodes in addOpen function when their F-values is equal
-        std::vector<Node>               open;
+        std::list<Node>                 open;
         std::map<int, Node>             close;
 };
 #endif
