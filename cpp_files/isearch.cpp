@@ -26,14 +26,14 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     (start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
     (start).parent = -1;
     bool reached = false;
-    open.push_back(start);
+    open.insert(start);
     Node finish_node;
     ++nodes;
     while (!open.empty()) {
         ++steps;
-        open.sort();
+        // open.sort();
         Node v = *open.begin();
-        open.erase(std::find(open.begin(), open.end(), v));
+        open.erase(open.begin());
         int current_key = width * v.i + v.j;
         close[current_key] = v;
         if (v.i == finish_i && v.j == finish_j) {
@@ -43,7 +43,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             finish_node.parent = v.parent;
             finish_node.g = v.g;
             finish_node.H = v.H;
-            open.push_back(finish_node);
+            open.insert(finish_node);
             break;
         }
         std::list<Node> Successors = findSuccessors(v, map, options);
@@ -74,12 +74,17 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                     adj_node.g = v.g + successor_g(v, adj_node);
                     adj_node.parent = current_key;
                     adj_node.H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
-                    open.push_back(adj_node);
+                    open.insert(adj_node);
                 } else {
                     if ((*it_open).g > v.g + successor_g(v, *it_open)) {
-                        (*it_open).g = v.g + successor_g(v, *it_open);
-                        (*it_open).H = v.H;
-                        (*it_open).parent = current_key;
+                        Node temp;
+                        temp.i = (*it_open).i;
+                        temp.j = (*it_open).j;
+                        temp.g = v.g + successor_g(v, *it_open);
+                        temp.H = v.H;
+                        temp.parent = current_key;
+                        open.erase(it_open);
+                        open.insert(temp);
                     }
                 }
 

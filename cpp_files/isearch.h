@@ -57,7 +57,7 @@ class ISearch
         std::list<Node>                 lppath, hppath;
         double                          hweight;//weight of h-value
         bool                            breakingties;//flag that sets the priority of nodes in addOpen function when their F-values is equal
-        std::list<Node>                 open;
+        std::multiset<Node>             open;
         std::map<int, Node>             close;
 };
 #endif
