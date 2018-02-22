@@ -92,10 +92,11 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     }
     makeSecondaryPath();
     unsigned int finish_time = clock();
+    sresult.pathlength = finish_node.g;
     sresult.pathfound = reached;
     sresult.nodescreated = nodes ;
     sresult.numberofsteps = steps;
-    sresult.time = finish_time - start_time;
+    sresult.time = (double(finish_time - start_time)) / CLOCKS_PER_SEC;
     sresult.hppath = &hppath;
     sresult.lppath = &lppath;
     return sresult;
