@@ -17,12 +17,19 @@ struct Node
     int     i, j; //grid cell coordinates
     double  F = 0, g = 0, H = 0; //f-, g- and h-values of the search node
     int parent;
+    bool break_ties = false;
     // Node    *parent = nullptr; //backpointer to the predecessor node (e.g. the node which g-value was used to set the g-velue of the current node)
 
     bool operator == (const Node &other) const {
         return i == other.i && j == other.j;
     }
     bool operator < (const Node & other) const {
+        if (break_ties) {
+            if (g + H < other.g + other.H) {
+                return g + H < other.g + other.H;
+            }
+            return g < other.g;
+            }
         return g + H < other.g + other.H;
     }
     void print() {

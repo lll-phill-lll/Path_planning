@@ -21,6 +21,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     start.i = (map.getStart()).first;
     start.j = (map.getStart()).second;
     start.g = 0;
+    start.break_ties = CN_SP_BT_GMAX;
     int finish_i = (map.getFinish()).first;
     int finish_j = (map.getFinish()).second;
     (start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
@@ -35,6 +36,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
         Node v = *open.begin();
         open.erase(open.begin());
         int current_key = width * v.i + v.j;
+        node_in_open[current_key]= false;
         close[current_key] = v;
         if (v.i == finish_i && v.j == finish_j) {
             reached = true;
@@ -43,6 +45,7 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             finish_node.parent = v.parent;
             finish_node.g = v.g;
             finish_node.H = v.H;
+            finish_node.break_ties = CN_SP_BT_GMAX;
             open.insert(finish_node);
             break;
         }
@@ -52,48 +55,41 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             int adj_i = successor.i;
             int adj_j = successor.j;
             int node_key = width * adj_i + adj_j;
-            bool node_in_closed = false;
-            auto it = close.find(node_key);
-            if (it != close.end()) {
-                node_in_closed = true;
-            }
-            if (!node_in_closed) {
-                bool node_in_open = false;
+            auto node_pos = node_in_open.find(node_key);
+            if (node_pos == node_in_open.end()) {
+                Node adj_node;
+                ++nodes;
+                adj_node.i = adj_i;
+                adj_node.j = adj_j;
+                adj_node.g = v.g + successor_g(v, adj_node);
+                adj_node.parent = current_key;
+                adj_node.H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
+                open.insert(adj_node);
+                node_in_open[node_key] = true;
+            } else if (node_pos -> second) {
                 auto it_open = open.begin();
                 for (it_open; it_open != open.end(); ++it_open) {
                     if ((*it_open).i == adj_i && (*it_open).j == adj_j) {
-                        node_in_open = true;
                         break;
                     }
                 }
-                if (!node_in_open) {
-                    Node adj_node;
-                    ++nodes;
-                    adj_node.i = adj_i;
-                    adj_node.j = adj_j;
-                    adj_node.g = v.g + successor_g(v, adj_node);
-                    adj_node.parent = current_key;
-                    adj_node.H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
-                    open.insert(adj_node);
-                } else {
-                    if ((*it_open).g > v.g + successor_g(v, *it_open)) {
-                        Node temp;
-                        temp.i = (*it_open).i;
-                        temp.j = (*it_open).j;
-                        temp.g = v.g + successor_g(v, *it_open);
-                        temp.H = v.H;
-                        temp.parent = current_key;
-                        open.erase(it_open);
-                        open.insert(temp);
-                    }
+                if ((*it_open).g > v.g + successor_g(v, *it_open)) {
+                    Node temp;
+                    temp.i = (*it_open).i;
+                    temp.j = (*it_open).j;
+                    temp.g = v.g + successor_g(v, *it_open);
+                    temp.H = v.H;
+                    temp.break_ties = CN_SP_BT_GMAX;
+                    temp.parent = current_key;
+                    open.erase(it_open);
+                    open.insert(temp);
                 }
-
             }
         }
     }
     makePrimaryPath(finish_node);
     if (reached) {
-        lppath.push_front(start);
+           lppath.push_front(start);
     }
     makeSecondaryPath();
     unsigned int finish_time = clock();
@@ -112,7 +108,7 @@ double ISearch::successor_g(Node a, Node b) {
     if (abs(i_parent - i) - abs(j_parent - j) != 0) {
         return 1;
     } else {
-        return sqrt(2);
+        return CN_SQRT_TWO;
     }
 }
 
@@ -140,35 +136,23 @@ std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const Envi
                         if (bariers_around == 0) {
                             to_insert.i = adj_i;
                             to_insert.j = adj_j;
-                            if (i == 0 || j == 0) {
-                                successors.push_front(to_insert);
-                            } else {
-                                successors.push_back(to_insert);
-                            }
+                            successors.push_front(to_insert);
                         } else if (options.cutcorners) {
                             if (bariers_around == 1) {
                                 to_insert.i = adj_i;
                                 to_insert.j = adj_j;
-                                if (i == 0 || j == 0) {
-                                    successors.push_front(to_insert);
-                                } else {
-                                    successors.push_back(to_insert);
-                                }
+                                successors.push_front(to_insert);
                             } else if (options.allowsqueeze) {
                                 to_insert.i = adj_i;
                                 to_insert.j = adj_j;
-                                if (i == 0 || j == 0) {
-                                    successors.push_front(to_insert);
-                                } else {
-                                    successors.push_back(to_insert);
-                                }
+                                successors.push_front(to_insert);
                             }
                         }
                     } else {
                         if (i == 0 || j == 0) {
                             to_insert.i = adj_i;
                             to_insert.j = adj_j;
-                            successors.push_back(to_insert);
+                            successors.push_front(to_insert);
                         }
                     }
                 }

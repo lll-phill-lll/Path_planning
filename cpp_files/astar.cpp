@@ -19,7 +19,10 @@ double Astar::computeHFromCellToCell(int i1, int j1, int i2, int j2, const Envir
         return hweight * (std::max(abs(i1 - i2), abs(j1 - j2)));
     }
     if (options.metrictype == CN_SP_MT_DIAG) {
-        return hweight * std::min(abs(i1 - i2), abs(j1 - j2)) + abs(abs(i1 - i2) - abs(j1 - j2));
+        double dx = abs(i1 - i2);
+        double dy = abs(j1 - j2);
+        double D = 1, D2 = sqrt(2);
+        return hweight * sqrt(D * (dx + dy) + (D2 - 2 * D) * std::min(dx, dy));
     }
     return 0;
 }

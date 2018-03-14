@@ -53,11 +53,12 @@ class ISearch
         double successor_g(Node a, Node b);
         //Node resetParent(Node current, Node parent, const Map &map, const EnvironmentOptions &options) {return current;}//need for Theta*
 
-        SearchResult                    sresult;
-        std::list<Node>                 lppath, hppath;
-        double                          hweight;//weight of h-value
-        bool                            breakingties;//flag that sets the priority of nodes in addOpen function when their F-values is equal
-        std::multiset<Node>             open;
-        std::map<int, Node>             close;
+        SearchResult                                    sresult;
+        std::list<Node>                                 lppath, hppath;
+        double                                          hweight;//weight of h-value
+        bool                                            breakingties;//flag that sets the priority of nodes in addOpen function when their F-values is equal
+        std::multiset<Node>                             open;
+        std::unordered_map<int, Node>                   close;
+        std::unordered_map<int, bool>                   node_in_open;
 };
 #endif
