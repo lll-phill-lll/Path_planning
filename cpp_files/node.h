@@ -28,9 +28,9 @@ struct Node
             if (g + H < other.g + other.H) {
                 return g + H < other.g + other.H;
             }
-            return g < other.g;
+            return g > other.g;
             }
-        return g + H < other.g + other.H;
+        return g < other.g;
     }
     void print() {
         std::cout << "i = " << i << " j = " << j << std::endl;
