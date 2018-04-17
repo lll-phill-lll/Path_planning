@@ -24,13 +24,28 @@ struct Node
         return i == other.i && j == other.j;
     }
     bool operator < (const Node & other) const {
-        if (break_ties) {
+        if (F >= other.F) {
+            if (F == other.F) {
+                if (break_ties == CN_SP_BT_GMAX && other.g >= g ||
+                        break_ties == CN_SP_BT_GMIN && other.g <= g) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
+        return g > other.g;
+        /* if (break_ties) {
             if (g + H < other.g + other.H) {
                 return g + H < other.g + other.H;
             }
             return g > other.g;
             }
-        return g < other.g;
+        return g < other.g; */
     }
     void print() {
         std::cout << "i = " << i << " j = " << j << std::endl;

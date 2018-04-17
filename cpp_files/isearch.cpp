@@ -16,15 +16,16 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
     int width = map.getMapWidth();
     int nodes = 0;
     int steps = 0;
+    int finish_i = (map.getFinish()).first;
+    int finish_j = (map.getFinish()).second;
     Node start;
     ++nodes;
     start.i = (map.getStart()).first;
     start.j = (map.getStart()).second;
     start.g = 0;
-    start.break_ties = CN_SP_BT_GMAX;
-    int finish_i = (map.getFinish()).first;
-    int finish_j = (map.getFinish()).second;
+    start.break_ties = breakingties;
     (start).H = computeHFromCellToCell((map.getStart()).first, (map.getStart()).second, finish_i, finish_j, options);
+    start.F = start.H * hweight + start.g;
     (start).parent = -1;
     bool reached = false;
     open.insert(start);
@@ -45,7 +46,8 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             finish_node.parent = v.parent;
             finish_node.g = v.g;
             finish_node.H = v.H;
-            finish_node.break_ties = CN_SP_BT_GMAX;
+            finish_node.F = v.F;
+            finish_node.break_ties = breakingties;
             open.insert(finish_node);
             break;
         }
@@ -55,6 +57,9 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             int adj_i = successor.i;
             int adj_j = successor.j;
             int node_key = width * adj_i + adj_j;
+            /* if (close.find(node_key) != close.end()) {
+                continue;
+            } */
             auto node_pos = node_in_open.find(node_key);
             if (node_pos == node_in_open.end()) {
                 Node adj_node;
@@ -64,6 +69,8 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                 adj_node.g = v.g + successor_g(v, adj_node);
                 adj_node.parent = current_key;
                 adj_node.H = computeHFromCellToCell(adj_i, adj_j, finish_i, finish_j, options);
+                adj_node.F = adj_node.H * hweight + adj_node.g;
+                adj_node.break_ties = breakingties;
                 open.insert(adj_node);
                 node_in_open[node_key] = true;
             } else if (node_pos -> second) {
@@ -79,7 +86,8 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                     temp.j = (*it_open).j;
                     temp.g = v.g + successor_g(v, *it_open);
                     temp.H = v.H;
-                    temp.break_ties = CN_SP_BT_GMAX;
+                    temp.F = v.F;
+                    temp.break_ties = breakingties;
                     temp.parent = current_key;
                     open.erase(it_open);
                     open.insert(temp);
