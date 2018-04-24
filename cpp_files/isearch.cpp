@@ -57,9 +57,6 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             int adj_i = successor.i;
             int adj_j = successor.j;
             int node_key = width * adj_i + adj_j;
-            /* if (close.find(node_key) != close.end()) {
-                continue;
-            } */
             auto node_pos = node_in_open.find(node_key);
             if (node_pos == node_in_open.end()) {
                 Node adj_node;
@@ -95,11 +92,11 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
             }
         }
     }
-    makePrimaryPath(finish_node);
     if (reached) {
-           lppath.push_front(start);
+        makePrimaryPath(finish_node);
+        lppath.push_front(start);
+        makeSecondaryPath();
     }
-    makeSecondaryPath();
     unsigned int finish_time = clock();
     sresult.pathlength = finish_node.g;
     sresult.pathfound = reached;
@@ -116,9 +113,11 @@ double ISearch::successor_g(Node a, Node b) {
     if (abs(i_parent - i) - abs(j_parent - j) != 0) {
         return 1;
     } else {
-        return CN_SQRT_TWO;
+        return sqrt(2);
     }
 }
+
+
 
 std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const EnvironmentOptions &options) {
     std::list<Node> successors;
@@ -129,6 +128,9 @@ std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const Envi
             if (!(i == 0 && j == 0)) {
                 int adj_i = curNode.i + i;
                 int adj_j = curNode.j + j;
+                if (close.find(map.getMapWidth() * adj_i + j) != close.end()) {
+                    continue;
+                }
                 if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() &&
                         adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
                     bariers_around = 0;
