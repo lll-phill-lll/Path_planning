@@ -10,6 +10,7 @@ ISearch::ISearch()
 ISearch::~ISearch(void) {}
 
 
+
 SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const EnvironmentOptions &options)
 {
     unsigned int start_time = clock();
@@ -77,13 +78,14 @@ SearchResult ISearch::startSearch(ILogger *Logger, const Map &map, const Environ
                         break;
                     }
                 }
-                if ((*it_open).g > v.g + successor_g(v, *it_open)) {
+                if ((*it_open).g >= v.g + successor_g(v, *it_open)) {
                     Node temp;
+                    double sg = successor_g(v, *it_open);
                     temp.i = (*it_open).i;
                     temp.j = (*it_open).j;
-                    temp.g = v.g + successor_g(v, *it_open);
+                    temp.g = v.g + sg;
                     temp.H = v.H;
-                    temp.F = v.F;
+                    temp.F = (*it_open).F;
                     temp.break_ties = breakingties;
                     temp.parent = current_key;
                     open.erase(it_open);
@@ -128,9 +130,6 @@ std::list<Node> ISearch::findSuccessors(Node curNode, const Map &map, const Envi
             if (!(i == 0 && j == 0)) {
                 int adj_i = curNode.i + i;
                 int adj_j = curNode.j + j;
-                if (close.find(map.getMapWidth() * adj_i + j) != close.end()) {
-                    continue;
-                }
                 if (adj_i >= 0 && adj_j >= 0 && adj_i < map.getMapHeight() &&
                         adj_j < map.getMapWidth() && !map.getValue(adj_i, adj_j)) {
                     bariers_around = 0;

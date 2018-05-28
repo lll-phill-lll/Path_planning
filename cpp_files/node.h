@@ -28,9 +28,9 @@ struct Node
             if (F == other.F) {
                 if (break_ties == CN_SP_BT_GMAX && other.g >= g ||
                         break_ties == CN_SP_BT_GMIN && other.g <= g) {
-                    return true;
-                } else {
                     return false;
+                } else {
+                    return true;
                 }
             } else {
                 return false;
